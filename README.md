@@ -74,7 +74,7 @@ To run all tests use `composer run tests`.
 
 ### VoySpeak
 
-VoySpeak servers are supported by this fork. The default ServerQuery port of a VoySpeak server is `10101`:
+VoySpeak servers are supported as well. The default ServerQuery port of a VoySpeak server is `10101`:
 
 ```php
 $server = TeamSpeak3::factory("serverquery://username:password@127.0.0.1:10101/?server_port=9987");
