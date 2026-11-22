@@ -106,7 +106,7 @@ class ServerQueryTest extends TestCase
         $serverQuery = new MockServerQuery([
             'host' => '0.0.0.0',
             'port' => 9987,
-            'welcome' => 'VoySpeak ServerQuery',
+            'welcome' => 'VoySpeak',
         ]);
 
         $this->assertTrue($serverQuery->getTransport()->isConnected());

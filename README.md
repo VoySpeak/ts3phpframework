@@ -72,6 +72,37 @@ composer require planetteamspeak/ts3-php-framework:dev-master
 
 To run all tests use `composer run tests`.
 
+### VoySpeak
+
+VoySpeak servers are supported by this fork. The default ServerQuery port of a VoySpeak server is `10101`:
+
+```php
+$server = TeamSpeak3::factory("serverquery://username:password@127.0.0.1:10101/?server_port=9987");
+
+// music bots and playlists
+$botId = $server->musicBotCreate();
+$playlistId = $server->playlistCreate(["playlist_title" => "My playlist"]);
+$server->playlistSongAdd($playlistId, "https://example.com/song.mp3", "ffmpeg");
+$server->musicBotPlaylistAssign($botId, $playlistId);
+$server->musicBotPlay($botId);
+
+// channel conversations
+$history = $server->conversationHistory($channelId);
+
+// privilege keys with multiple actions
+$token = $server->privilegeKeyCreateActions([
+    ["type" => TeamSpeak3::TOKEN_ACTION_SERVERGROUP_ADD, "id1" => $serverGroupId],
+    ["type" => TeamSpeak3::TOKEN_ACTION_CHANNEL_JOIN, "id2" => $channelId],
+], "My token", 1);
+
+// ServerQuery accounts and action log
+$account = $server->getParent()->queryAccountCreate("my-bot");
+$log = $server->logQuery(50);
+```
+
+All additional commands can be found in `src/Node/VoySpeakServer.php` and `src/Node/VoySpeakHost.php`. Commands which are
+not implemented by VoySpeak (API keys, custom client properties and `queryLogin*()`) will throw an exception.
+
 ### Useful Links
 
 Visit the following pages for more information about the TS3 PHP Framework:

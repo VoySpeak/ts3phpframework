@@ -21,6 +21,8 @@ use ReflectionClass;
  */
 class Host extends Node
 {
+    use VoySpeakHost;
+
     /**
      * @ignore
      */
@@ -1133,7 +1135,7 @@ class Host extends Node
     protected function fetchPermissionCats()
     {
         $permcats = [];
-        $reflects = new ReflectionClass("TeamSpeak3");
+        $reflects = new ReflectionClass(TeamSpeak3::class);
 
         foreach ($reflects->getConstants() as $key => $val) {
             if (!StringHelper::factory($key)->startsWith("PERM_CAT") || $val == 0xFF) {

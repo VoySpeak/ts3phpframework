@@ -192,7 +192,7 @@ class ReplyTest extends TestCase
 
     public function testFetchReplyRemovesVoySpeakGreeting(): void
     {
-        $reply = new Reply([new StringHelper('Welcome to the VoySpeak ServerQuery interface.'), new StringHelper(static::$S_SERVERLIST), new StringHelper(static::$S_ERROR_OK)]);
+        $reply = new Reply([new StringHelper('Welcome on the VoySpeak ServerQuery interface.'), new StringHelper(static::$S_SERVERLIST), new StringHelper(static::$S_ERROR_OK)]);
 
         $this->assertSame(static::$E_SERVERLIST, $reply->toString()->toString());
     }

@@ -9,6 +9,16 @@
    ! Important - Take note!
 ===============================================================================
 
+=== Release 2.1.0 - 22 Nov 2026 ===
+ + Add support for the VoySpeak protocol greeting
+ + Add VoySpeak music bot, playlist, conversation, privilege key action, ServerQuery account and log query commands
+ + Add VoySpeak specifiers to `notifyRegister()` and `notifyUnregister()`
+ + Add `getErrors()` to access the individual results of bulked commands
+ - Fix errors of bulked commands, which were ignored if the first row succeeded
+ - Fix `channelCreate()`, `banCreate()`, `banCount()`, `clientCountDb()`, `connectionInfo()` and `snapshotDeploy()` on VoySpeak
+ - Fix `permissionList()` and `permissionCats()`, which tried to load a not existing class
+ - Fix `privilegeKeyList()` failing to resolve unknown groups
+
 === Release 1.2.1 - 17 Aug 2023 ===
  + Add further PHPUnit tests
  + Improve `permissionTree()` function in `src/Node/Host.php`

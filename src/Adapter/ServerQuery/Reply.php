@@ -46,6 +46,13 @@ class Reply
     protected array $err = [];
 
     /**
+     * Stores an array containing the error info of each row for bulked commands.
+     *
+     * @var array
+     */
+    protected array $errs = [];
+
+    /**
      * Sotres an array of events that occured before or during this reply.
      *
      * @var array
@@ -253,6 +260,16 @@ class Reply
     }
 
     /**
+     * Returns the error properties of each row. VoySpeak reports an individual result for each row of a bulked command.
+     *
+     * @return array
+     */
+    public function getErrors(): array
+    {
+        return $this->errs;
+    }
+
+    /**
      * Parses a ServerQuery error and throws a PlanetTeamSpeak\TeamSpeak3Framework\Exception\ServerQueryException object if
      * there's an error.
      *
@@ -263,12 +280,23 @@ class Reply
      */
     protected function fetchError(StringHelper $err): void
     {
-        $cells = $err->section(TeamSpeak3::SEPARATOR_CELL, 1, 3);
+        $bulks = substr($err->toString(), strlen(TeamSpeak3::ERROR . TeamSpeak3::SEPARATOR_CELL));
 
-        foreach ($cells->split(TeamSpeak3::SEPARATOR_CELL) as $pair) {
-            list($ident, $value) = $pair->split(TeamSpeak3::SEPARATOR_PAIR);
+        foreach (explode(TeamSpeak3::SEPARATOR_LIST, $bulks) as $row => $bulk) {
+            $this->errs[$row] = [];
 
-            $this->err[$ident->toString()] = $value->isInt() ? $value->toInt() : $value->unescape();
+            $cells = (new StringHelper($bulk))->section(TeamSpeak3::SEPARATOR_CELL, 0, 2);
+
+            foreach ($cells->split(TeamSpeak3::SEPARATOR_CELL) as $pair) {
+                list($ident, $value) = $pair->split(TeamSpeak3::SEPARATOR_PAIR);
+
+                $this->errs[$row][$ident->toString()] = $value->isInt() ? $value->toInt() : $value->unescape();
+            }
+
+            // use the first row which has failed, if there's any
+            if ($row === 0 || (($this->err["id"] ?? 0x00) == 0x00 && ($this->errs[$row]["id"] ?? 0x00) != 0x00)) {
+                $this->err = $this->errs[$row];
+            }
         }
 
         Signal::getInstance()->emit("notifyError", $this);

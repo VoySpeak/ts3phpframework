@@ -19,6 +19,8 @@ use PlanetTeamSpeak\TeamSpeak3Framework\TeamSpeak3;
  */
 class Server extends Node
 {
+    use VoySpeakServer;
+
     /**
      * @ignore
      */
@@ -144,11 +146,42 @@ class Server extends Node
         $cid = $this->execute("channelcreate", $properties)->toList();
         $this->channelListReset();
 
+        if (!isset($cid["cid"])) {
+            return $this->channelFindCreated($properties);
+        }
+
         if (!isset($properties["channel_flag_permanent"]) && !isset($properties["channel_flag_semi_permanent"])) {
             $this->getParent()->whoamiSet("client_channel_id", $cid["cid"]);
         }
 
         return $cid["cid"];
+    }
+
+    /**
+     * Returns the ID of a channel which has just been created, since VoySpeak does not return the ID of a new channel.
+     *
+     * @param array $properties
+     * @return integer
+     * @throws AdapterException
+     * @throws ServerQueryException
+     */
+    protected function channelFindCreated(array $properties): int
+    {
+        $cids = [];
+
+        foreach ($this->channelList() as $cid => $channel) {
+            if ((string)$channel["channel_name"] === (string)($properties["channel_name"] ?? "") && $channel["pid"] == ($properties["cpid"] ?? 0)) {
+                $cids[] = $cid;
+            }
+        }
+
+        if (!count($cids)) {
+            throw new ServerQueryException("invalid channelID", 0x300);
+        }
+
+        $this->getParent()->whoamiReset();
+
+        return max($cids);
     }
 
     /**
@@ -677,7 +710,7 @@ class Server extends Node
      */
     public function clientCountDb(): int
     {
-        return current($this->execute("clientdblist -count", ["duration" => 1])->toList("count"));
+        return $this->execute("clientdblist -count", ["duration" => 1])->toArray()[0]["count"];
     }
 
     /**
@@ -1984,6 +2017,11 @@ class Server extends Node
 
         $detail = $this->request("serversnapshotdeploy -mapping " . $data)->toList();
 
+        // a single row is returned as a flat list (VoySpeak does not send the mapping)
+        if (isset($detail["sid"])) {
+            $detail = [$detail];
+        }
+
         if (isset($detail[0]["sid"])) {
             Signal::getInstance()->emit("notifyServercreated", $this->getParent(), $detail[0]["sid"]);
 
@@ -2002,28 +2040,49 @@ class Server extends Node
      * messages. Depending on the notifications you've registered for, the server will send you
      * a message on every event.
      *
+     * VoySpeak servers additionally support a specifier to select a single event of a category (e.g. music and player).
+     * Use notifyList() to get a list of all available events.
+     *
      * @param string $event
      * @param integer $id
+     * @param string|null $specifier
      * @return void
      * @throws AdapterException
      * @throws ServerQueryException
      */
-    public function notifyRegister(string $event, int $id = 0): void
+    public function notifyRegister(string $event, int $id = 0, ?string $specifier = null): void
     {
-        $this->execute("servernotifyregister", ["event" => $event, "id" => $id]);
+        $this->execute("servernotifyregister", ["event" => $event, "id" => $id, "specifier" => $specifier]);
     }
 
     /**
      * Unregisters all events previously registered with servernotifyregister so you will no
-     * longer receive notification messages.
+     * longer receive notification messages. The optional parameters are supported by VoySpeak servers only.
      *
+     * @param string|null $event
+     * @param string|null $specifier
      * @return void
      * @throws AdapterException
      * @throws ServerQueryException
      */
-    public function notifyUnregister(): void
+    public function notifyUnregister(?string $event = null, ?string $specifier = null): void
     {
-        $this->request("servernotifyunregister");
+        if ($event !== null) {
+            $this->execute("servernotifyunregister", ["event" => $event, "specifier" => $specifier]);
+            return;
+        }
+
+        try {
+            $this->request("servernotifyunregister");
+        } catch (ServerQueryException $e) {
+            /* ERROR_parameter_not_found */
+            if ($e->getCode() != 0x603) {
+                throw $e;
+            }
+
+            // VoySpeak requires an event
+            $this->execute("servernotifyunregister", ["event" => "all", "specifier" => "all"]);
+        }
     }
 
     /**
@@ -2062,7 +2121,7 @@ class Server extends Node
 
                 try {
                     $tokens[$token]["token_id1"] = $this->$func($array["token_id1"])->name;
-                } catch (NodeException $e) {
+                } catch (NodeException | ServerQueryException $e) {
                     /* ERROR_channel_invalid_id */
                     if ($e->getCode() != 0xA00) {
                         throw $e;
@@ -2259,7 +2318,10 @@ class Server extends Node
      */
     public function banCount(): int
     {
-        return current($this->execute("banlist -count", ["duration" => 1])->toList("count"));
+        $bans = $this->execute("banlist -count", ["duration" => 1])->toArray();
+
+        // VoySpeak always returns the whole list without a counter
+        return $bans[0]["count"] ?? count($bans);
     }
 
     /**
@@ -2292,7 +2354,28 @@ class Server extends Node
 
         $banid = $this->execute("banadd", $rules)->toList();
 
-        return $banid["banid"];
+        if (isset($banid["banid"])) {
+            return $banid["banid"];
+        }
+
+        // VoySpeak does not return the ID of the new ban
+        $banids = [];
+
+        foreach ($this->banList() as $id => $ban) {
+            foreach (["ip", "name", "uid"] as $rule) {
+                if ((string)($ban[$rule] ?? "") !== (string)($rules[$rule] ?? "")) {
+                    continue 2;
+                }
+            }
+
+            $banids[] = $id;
+        }
+
+        if (!count($banids)) {
+            throw new ServerQueryException("database empty result set", 0x501);
+        }
+
+        return max($banids);
     }
 
     /**
@@ -2460,7 +2543,7 @@ class Server extends Node
      */
     public function connectionInfo(): array
     {
-        return $this->request("serverrequestconnectioninfo")->toList();
+        return $this->fetchNotifyData($this->request("serverrequestconnectioninfo"), "serverconnectioninfo");
     }
 
     /**

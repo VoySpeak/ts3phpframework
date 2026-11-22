@@ -98,7 +98,7 @@ class TeamSpeak3
     /**
      * VoySpeak protocol greeting message prefix.
      */
-    public const VOY_MOTD_PREFIX = "Welcome";
+    public const VOY_MOTD_PREFIX = "Welcome on the VoySpeak ServerQuery interface";
 
     /**
      * TeamSpeak 3 protocol error message prefix.
@@ -118,7 +118,7 @@ class TeamSpeak3
     /**
      * TeamSpeak 3 PHP Framework version.
      */
-    public const LIB_VERSION = "1.3.0";
+    public const LIB_VERSION = "2.1.0";
 
     /*@
      * TeamSpeak 3 protocol separators.
@@ -209,6 +209,50 @@ class TeamSpeak3
      */
     public const CLIENT_TYPE_REGULAR = 0x00; //!< 0: regular client
     public const CLIENT_TYPE_SERVERQUERY = 0x01; //!< 1: query client
+    public const CLIENT_TYPE_MUSIC = 0x04; //!< 4: music bot (VoySpeak)
+
+    /*@
+     * VoySpeak music bot types.
+     */
+    public const MUSICBOT_TYPE_PERMANENT = 0x00; //!< 0: permanent music bot
+    public const MUSICBOT_TYPE_SEMI_PERMANENT = 0x01; //!< 1: semi-permanent music bot
+    public const MUSICBOT_TYPE_TEMPORARY = 0x02; //!< 2: temporary music bot
+
+    /*@
+     * VoySpeak music bot player states.
+     */
+    public const MUSIC_STATE_SLEEPING = 0x00; //!< 0: player is sleeping
+    public const MUSIC_STATE_LOADING = 0x01; //!< 1: player is loading a song
+    public const MUSIC_STATE_PLAYING = 0x02; //!< 2: player is playing
+    public const MUSIC_STATE_PAUSED = 0x03; //!< 3: player is paused
+    public const MUSIC_STATE_STOPPED = 0x04; //!< 4: player is stopped
+
+    /*@
+     * VoySpeak music bot player actions.
+     */
+    public const MUSIC_ACTION_STOP = 0x00; //!< 0: stop the player
+    public const MUSIC_ACTION_PLAY = 0x01; //!< 1: start the player
+    public const MUSIC_ACTION_PAUSE = 0x02; //!< 2: pause the player
+    public const MUSIC_ACTION_NEXT = 0x03; //!< 3: play next song
+    public const MUSIC_ACTION_PREVIOUS = 0x04; //!< 4: play previous song
+    public const MUSIC_ACTION_FORWARD = 0x05; //!< 5: seek forward
+    public const MUSIC_ACTION_REWIND = 0x06; //!< 6: seek backward
+
+    /*@
+     * VoySpeak playlist replay modes.
+     */
+    public const PLAYLIST_REPLAY_LINEAR = 0x00; //!< 0: play the list once
+    public const PLAYLIST_REPLAY_LOOP_LIST = 0x01; //!< 1: repeat the list
+    public const PLAYLIST_REPLAY_LOOP_SONG = 0x02; //!< 2: repeat the current song
+    public const PLAYLIST_REPLAY_SHUFFLE = 0x03; //!< 3: play the list in random order
+
+    /*@
+     * VoySpeak token actions.
+     */
+    public const TOKEN_ACTION_SERVERGROUP_ADD = 0x01; //!< 1: add a server group      (id1={groupID})
+    public const TOKEN_ACTION_SERVERGROUP_REMOVE = 0x02; //!< 2: remove a server group   (id1={groupID})
+    public const TOKEN_ACTION_CHANNELGROUP_SET = 0x03; //!< 3: set a channel group     (id1={groupID} id2={channelID})
+    public const TOKEN_ACTION_CHANNEL_JOIN = 0x04; //!< 4: allow to join a channel (id2={channelID})
 
     /*@
      * TeamSpeak 3 permission group database types.
